@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,8 @@ public class PhotoManager : MonoBehaviour
 {
     [SerializeField] private UnityEvent onPhotoRestart;
     [SerializeField] private UnityEvent onPhotoSuccess;
+    [SerializeField] private UnityEvent onUploadSuccess;
+    [SerializeField] private UnityEvent onUploadFailed;
 
     //Photo
     [SerializeField] private RawImage photoResultUI;
@@ -17,7 +20,9 @@ public class PhotoManager : MonoBehaviour
 
     //Timer
     [SerializeField] private List<GameObject> photoUIToHide;
+    [SerializeField] private List<GameObject> uploadUIToHide;
     [SerializeField] private TextMeshProUGUI countdownText;
+    [SerializeField] private TextMeshProUGUI uploadText;
     [SerializeField] private float photoTimer = 3.5f;
     private float currentPhotoTimer = 3.5f;
 
@@ -109,4 +114,55 @@ public class PhotoManager : MonoBehaviour
         photoTexture = null;
         photoTextureByte = null;
     }
+
+    public void UploadPicture() {
+        if(!File.Exists(filePath) || isUploading) {
+            Debug.LogWarning($"Either file doesnt exist at : {filePath} or it's still uploading");
+            return;
+        }
+        
+        isUploading = true;
+        foreach (var item in uploadUIToHide)
+            item.SetActive(false);
+
+        // uploadingText.gameObject.SetActive(true);
+        // uploadingText.text = "Sedang mengunggah foto...";
+        
+        var pngByte = File.ReadAllBytes(filePath);
+        var dateExpires = DateTime.UtcNow.AddMinutes(30);
+        StartCoroutine(PhotoHosting.Upload(OnUploadSuccess, OnUploadFailed, fileName, pngByte, dateExpires));
+    }
+
+    public void SetQRCodeUI(string link) {
+        var stringToQR = QrHandler.Encode(link, 256, 256);
+        
+        Texture2D encodedTexture = new Texture2D(256, 256);
+        encodedTexture.SetPixels32(stringToQR);
+        encodedTexture.Apply();
+
+        qrResultUI.texture = encodedTexture;
+    }
+
+    
+    private void OnUploadFailed()
+    {
+        Debug.Log("Failed callback");
+        // cameraUI.SetCanvasInteractable(true);
+        // uploadingText.text = "Foto gagal diunggah.";
+        onUploadFailed?.Invoke();
+        isUploading = false;
+    }
+
+    private void OnUploadSuccess(PhotoHostingResponse response)
+    {
+        Debug.Log($"Success callback {response.link}");
+        
+        // uploadingText.text = "Foto berhasil diunggah!";
+        CleanCacheTexture();
+        isUploading = false;
+        SetQRCodeUI(response.link);
+
+        onUploadSuccess?.Invoke();
+    }
+
 }
