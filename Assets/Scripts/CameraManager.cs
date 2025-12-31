@@ -7,7 +7,8 @@ using UnityEngine.UI;
 
 public class CameraManager : MonoBehaviour
 {
-    public RawImage rawImage;
+    public RawImage rawImageSettings;
+    public RawImage rawImagePhoto;
     public TMPro.TMP_Dropdown dropdownUI;
     WebCamTexture webCamTexture;
 
@@ -27,8 +28,12 @@ public class CameraManager : MonoBehaviour
             if (!string.IsNullOrEmpty(currentWebcamName))
             {
                 webCamTexture = new WebCamTexture(currentWebcamName);
-                rawImage.texture = webCamTexture;
-                rawImage.material.mainTexture = webCamTexture;
+                rawImageSettings.texture = webCamTexture;
+                rawImageSettings.material.mainTexture = webCamTexture;
+                
+                rawImagePhoto.texture = webCamTexture;
+                rawImagePhoto.material.mainTexture = webCamTexture;
+                
                 webCamTexture.Play();
                 isWebcamPlay = true;
                 Debug.Log("Web camera play");
@@ -74,8 +79,13 @@ public class CameraManager : MonoBehaviour
     {
         currentWebcamName = dropdownUI.options[index].text;
         webCamTexture = new WebCamTexture(currentWebcamName);
-        rawImage.texture = webCamTexture;
-        rawImage.material.mainTexture = webCamTexture;
+        
+        rawImageSettings.texture = webCamTexture;
+        rawImageSettings.material.mainTexture = webCamTexture;
+        
+        rawImagePhoto.texture = webCamTexture;
+        rawImagePhoto.material.mainTexture = webCamTexture;
+        
         webCamTexture.Play();
         isWebcamPlay = true;
     }
